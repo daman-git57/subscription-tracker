@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>My Profile | SubTrack</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../css/style.css"><link rel="stylesheet" href="../css/auth.css"></head>
+<body class="profile-page"><header class="profile-topbar"><a class="brand" href="index.html"><span class="brand-mark">✦</span><span>SubTrack</span></a><a class="button button-secondary" href="index.html">← Back to dashboard</a></header>
+<main class="profile-main"><p class="eyebrow">ACCOUNT SETTINGS</p><h1>My profile</h1><p class="subheading">Your SubTrack account details.</p>
+<section class="profile-card"><div class="profile-avatar" id="profileInitial">?</div><div><h2 id="profileName">Loading…</h2><p id="profileEmail">—</p></div></section>
+<section class="profile-details"><div><span>Full name</span><strong id="profileNameDetail">Shown above</strong></div><div><span>Email address</span><strong id="profileEmailDetail">Your registered email</strong></div><div><span>Account created</span><strong id="profileCreated">—</strong></div></section>
+<div class="profile-actions"><button class="button button-danger" id="logoutBtn">Log out</button></div>
+<p class="profile-note">Your login session is securely maintained by Supabase. Subscription records in this project are currently saved locally in this browser and separated by account.</p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../javascript/supabase-config.js"></script><script src="../javascript/auth.js"></script><script src="../javascript/profile.js"></script>
+</body></html>

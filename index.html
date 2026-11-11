@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SubTrack helps you track subscriptions and upcoming payments.">
+    <title>SubTrack | Subscription Manager</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Icons and chart/CSV libraries -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div id="app" class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <a class="brand" href="#" data-page="dashboard" aria-label="SubTrack home">
+                <span class="brand-mark"><i data-lucide="layers"></i></span>
+                <span>SubTrack</span>
+            </a>
+
+            <div class="sidebar-label">WORKSPACE</div>
+            <nav class="nav-menu" aria-label="Main navigation">
+                <button class="nav-link active" data-page="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
+                <button class="nav-link" data-page="subscriptions"><i data-lucide="credit-card"></i><span>My subscriptions</span><span class="nav-count" id="navSubscriptionCount">0</span></button>
+                <button class="nav-link" data-page="payments"><i data-lucide="calendar-days"></i><span>Upcoming payments</span></button>
+                <button class="nav-link" data-page="analytics"><i data-lucide="chart-no-axes-combined"></i><span>Analytics</span></button>
+            </nav>
+
+            <div class="sidebar-spacer"></div>
+            <div class="sidebar-tip">
+                <div class="tip-icon"><i data-lucide="sparkles"></i></div>
+                <strong>Stay on top of renewals</strong>
+                <p>Keep all your recurring payments in one place.</p>
+                <button class="tip-button" data-page="subscriptions">View subscriptions <i data-lucide="arrow-right"></i></button>
+            </div>
+            <button class="nav-link settings-link" data-page="settings"><i data-lucide="settings"></i><span>Settings</span></button>
+            <div class="sidebar-footer">SubTrack <span>v1.1 · Account workspace</span></div>
+        </aside>
+
+        <main class="main-area">
+            <header class="topbar">
+                <button class="mobile-menu icon-button" id="mobileMenuBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+                <div class="breadcrumb"><span>Workspace</span><i data-lucide="chevron-right"></i><strong id="breadcrumbCurrent">Dashboard</strong></div>
+                <div class="topbar-actions">
+                    <button class="icon-button" id="topUploadBtn" title="Import CSV"><i data-lucide="file-up"></i></button>
+                    <a class="user-chip profile-chip" href="profile.html" aria-label="Open your profile">
+                        <div class="avatar">?</div>
+                        <div class="user-meta"><strong>My account</strong><span>Open profile</span></div>
+                        <i data-lucide="chevron-down"></i>
+                    </a>
+                </div>
+            </header>
+
+            <section class="page-content">
+                <section class="page-view active" id="page-dashboard">
+                    <div class="welcome-row">
+                        <div>
+                            <p class="eyebrow" id="todayLabel">YOUR FINANCIAL OVERVIEW</p>
+                            <h1>Good to see you <span class="wave">✦</span></h1>
+                            <p class="subheading">Here's what's happening with your subscriptions.</p>
+                        </div>
+                        <button class="button button-primary" id="importStatementBtn"><i data-lucide="upload"></i> Import statement</button>
+                    </div>
+
+                    <div class="stats-grid">
+                        <article class="stat-card">
+                            <div class="stat-top"><span class="stat-icon purple"><i data-lucide="wallet"></i></span><span class="stat-note">Monthly estimate</span></div>
+                            <p class="stat-label">Monthly spending</p>
+                            <h2 id="monthlySpending">₹0</h2>
+                            <p class="stat-foot">Across active subscriptions</p>
+                        </article>
+                        <article class="stat-card">
+                            <div class="stat-top"><span class="stat-icon blue"><i data-lucide="credit-card"></i></span><span class="stat-note">Currently active</span></div>
+                            <p class="stat-label">Active subscriptions</p>
+                            <h2 id="activeSubscriptions">0</h2>
+                            <p class="stat-foot">Services you're tracking</p>
+                        </article>
+                        <article class="stat-card">
+                            <div class="stat-top"><span class="stat-icon orange"><i data-lucide="calendar-clock"></i></span><span class="stat-note">Next 7 days</span></div>
+                            <p class="stat-label">Upcoming payments</p>
+                            <h2 id="upcomingPayments">0</h2>
+                            <p class="stat-foot">Renewals coming up</p>
+                        </article>
+                        <article class="stat-card">
+                            <div class="stat-top"><span class="stat-icon green"><i data-lucide="chart-no-axes-combined"></i></span><span class="stat-note">Annual estimate</span></div>
+                            <p class="stat-label">Yearly spending</p>
+                            <h2 id="yearlySpending">₹0</h2>
+                            <p class="stat-foot">Based on active plans</p>
+                        </article>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <article class="panel chart-panel">
+                            <div class="panel-heading">
+                                <div><h2>Spending overview</h2><p>Your subscription costs over time</p></div>
+                                <select id="chartPeriod" class="select-control" aria-label="Chart period"><option value="6">Last 6 months</option><option value="12">Last 12 months</option></select>
+                            </div>
+                            <div class="chart-wrap"><canvas id="spendingChart"></canvas></div>
+                        </article>
+                        <article class="panel upcoming-panel">
+                            <div class="panel-heading">
+                                <div><h2>Upcoming payments</h2><p>What needs your attention</p></div>
+                                <button class="text-button" data-page="payments">View all <i data-lucide="arrow-up-right"></i></button>
+                            </div>
+                            <div id="dashboardUpcoming" class="payment-list"></div>
+                        </article>
+                    </div>
+
+                    <article class="panel table-panel">
+                        <div class="panel-heading">
+                            <div><h2>My subscriptions</h2><p>A quick look at your recurring services</p></div>
+                            <button class="button button-secondary button-small" data-page="subscriptions">View all</button>
+                        </div>
+                        <div class="table-scroll">
+                            <table>
+                                <thead><tr><th>SERVICE</th><th>CATEGORY</th><th>AMOUNT</th><th>BILLING CYCLE</th><th>NEXT PAYMENT</th><th>STATUS</th></tr></thead>
+                                <tbody id="dashboardSubscriptions"></tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <article class="import-banner">
+                        <div class="import-banner-icon"><i data-lucide="file-spreadsheet"></i></div>
+                        <div class="import-banner-copy"><h2>Find subscriptions in your statement</h2><p>Upload a CSV bank statement and SubTrack will look for repeated payments. You can review every match before saving it.</p></div>
+                        <button class="button button-primary" id="bannerUploadBtn">Upload CSV <i data-lucide="arrow-right"></i></button>
+                    </article>
+                </section>
+
+                <section class="page-view" id="page-subscriptions">
+                    <div class="page-heading-row"><div><p class="eyebrow">YOUR RECURRING SERVICES</p><h1>My subscriptions</h1><p class="subheading">Manage the services and plans you pay for.</p></div><button class="button button-primary" id="addSubscriptionBtn"><i data-lucide="plus"></i> Add subscription</button></div>
+                    <article class="panel">
+                        <div class="toolbar"><div class="search-box"><i data-lucide="search"></i><input id="subscriptionSearch" type="search" placeholder="Search subscriptions..."></div><select id="statusFilter" class="select-control"><option value="all">All statuses</option><option value="active">Active</option><option value="paused">Paused</option></select></div>
+                        <div class="table-scroll"><table><thead><tr><th>SERVICE</th><th>CATEGORY</th><th>AMOUNT</th><th>BILLING CYCLE</th><th>NEXT PAYMENT</th><th>STATUS</th><th></th></tr></thead><tbody id="subscriptionsTable"></tbody></table></div>
+                        <div class="table-empty-note" id="subscriptionEmpty" hidden>No subscriptions match your search. Add one or import a CSV statement.</div>
+                    </article>
+                </section>
+
+                <section class="page-view" id="page-payments">
+                    <div class="page-heading-row"><div><p class="eyebrow">NEVER MISS A RENEWAL</p><h1>Upcoming payments</h1><p class="subheading">A timeline of your next subscription payments.</p></div><button class="button button-primary" data-page="subscriptions"><i data-lucide="list"></i> View subscriptions</button></div>
+                    <div class="payment-summary" id="paymentSummary"></div>
+                    <article class="panel"><div class="panel-heading"><div><h2>Payment schedule</h2><p>Sorted by the next due date</p></div></div><div id="allPayments" class="full-payment-list"></div></article>
+                </section>
+
+                <section class="page-view" id="page-analytics">
+                    <div class="page-heading-row"><div><p class="eyebrow">UNDERSTAND YOUR SPENDING</p><h1>Analytics</h1><p class="subheading">See where your recurring payments add up.</p></div></div>
+                    <div class="stats-grid analytics-stats">
+                        <article class="stat-card"><p class="stat-label">Monthly spending</p><h2 id="analyticsMonthly">₹0</h2><p class="stat-foot">Estimated recurring cost</p></article>
+                        <article class="stat-card"><p class="stat-label">Annual projection</p><h2 id="analyticsYearly">₹0</h2><p class="stat-foot">If plans remain unchanged</p></article>
+                        <article class="stat-card"><p class="stat-label">Most expensive plan</p><h2 class="stat-text" id="mostExpensive">—</h2><p class="stat-foot">Highest monthly equivalent</p></article>
+                        <article class="stat-card"><p class="stat-label">Tracked services</p><h2 id="analyticsCount">0</h2><p class="stat-foot">Active subscriptions</p></article>
+                    </div>
+                    <div class="dashboard-grid analytics-grid"><article class="panel"><div class="panel-heading"><div><h2>Monthly spending trend</h2><p>Estimated monthly subscription spend</p></div></div><div class="chart-wrap"><canvas id="analyticsChart"></canvas></div></article><article class="panel"><div class="panel-heading"><div><h2>By category</h2><p>Monthly equivalent by category</p></div></div><div class="chart-wrap doughnut-wrap"><canvas id="categoryChart"></canvas></div><div id="categoryLegend" class="category-legend"></div></article></div>
+                </section>
+
+                <section class="page-view" id="page-settings">
+                    <div class="page-heading-row"><div><p class="eyebrow">PREFERENCES</p><h1>Settings</h1><p class="subheading">Manage your local SubTrack workspace.</p></div></div>
+                    <article class="panel settings-panel"><div><h2>Data & privacy</h2><p>Your subscriptions are saved in this browser using local storage. This demo does not connect to your bank.</p></div><div class="settings-actions"><button class="button button-secondary" id="exportDataBtn"><i data-lucide="download"></i> Export data</button><button class="button button-danger" id="clearDataBtn"><i data-lucide="trash-2"></i> Clear all data</button></div></article>
+                    <article class="panel settings-panel"><div><h2>About CSV imports</h2><p>SubTrack reads CSV files in your browser. Use a statement with date, description and amount columns. Review detected recurring payments before adding them.</p></div></article>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add subscription modal -->
+    <div class="modal-backdrop" id="subscriptionModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="modal-heading"><div><p class="eyebrow">TRACK A RECURRING PAYMENT</p><h2 id="modalTitle">Add subscription</h2></div><button class="icon-button close-modal" data-close-modal aria-label="Close"><i data-lucide="x"></i></button></div>
+            <form id="subscriptionForm">
+                <label>Service name<input name="name" required maxlength="50" placeholder="e.g. Netflix"></label>
+                <div class="form-row"><label>Amount (₹)<input name="amount" type="number" min="1" step="0.01" required placeholder="199"></label><label>Billing cycle<select name="cycle"><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="weekly">Weekly</option></select></label></div>
+                <div class="form-row"><label>Category<select name="category"><option>Entertainment</option><option>Music</option><option>Productivity</option><option>Shopping</option><option>Education</option><option>Utilities</option><option>Other</option></select></label><label>Next payment<input name="nextDate" type="date" required></label></div>
+                <div class="modal-actions"><button type="button" class="button button-secondary" data-close-modal>Cancel</button><button type="submit" class="button button-primary">Save subscription</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden file input used by the CSV import button -->
+    <input type="file" id="csvFile" accept=".csv,text/csv" hidden>
+
+    <!-- CSV import modal -->
+    <div class="modal-backdrop" id="csvModal" hidden>
+        <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="csvModalTitle">
+            <div class="modal-heading"><div><p class="eyebrow">CSV STATEMENT IMPORT</p><h2 id="csvModalTitle">Find recurring payments</h2></div><button class="icon-button close-modal" data-close-modal aria-label="Close"><i data-lucide="x"></i></button></div>
+            <div class="drop-zone" id="dropZone"><i data-lucide="file-up"></i><h3>Choose a CSV file</h3><p>Drop your statement here, or browse files on your device.</p><button type="button" class="button button-secondary" id="chooseCsvBtn">Choose CSV file</button><small>CSV only · Your file is processed locally in this browser</small></div>
+            <div id="csvResults" class="csv-results" hidden></div>
+            <div class="modal-actions"><button class="button button-secondary" data-close-modal>Close</button><button class="button button-primary" id="saveDetectedBtn" disabled>Add selected subscriptions</button></div>
+        </div>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../javascript/supabase-config.js"></script>
+    <script src="../javascript/auth.js"></script>
+    <script src="../javascript/storage.js"></script>
+    <script src="../javascript/scanner.js"></script>
+    <script src="../javascript/subscriptions.js"></script>
+    <script src="../javascript/analytics.js"></script>
+    <script src="../javascript/app.js"></script>
+</body>
+</html>
